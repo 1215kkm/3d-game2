@@ -1184,7 +1184,7 @@ let dragBtn = -1, lastX=0, lastY=0, downX=0, downY=0;
 canvas.addEventListener('pointerdown', e=>{
   audio();
   dragBtn = e.button; lastX=downX=e.clientX; lastY=downY=e.clientY;
-  canvas.setPointerCapture(e.pointerId);
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
 });
 canvas.addEventListener('pointermove', e=>{
   if(dragBtn<0) return;
@@ -1214,6 +1214,7 @@ canvas.addEventListener('pointerup', e=>{
 canvas.addEventListener('wheel', e=>{
   e.preventDefault();
   cam.dist *= 1 + Math.sign(e.deltaY)*0.11;
+  cam.dist = Math.max(cam.minDist, Math.min(cam.maxDist*1.02, cam.dist));
 }, {passive:false});
 canvas.addEventListener('contextmenu', e=>e.preventDefault());
 canvas.addEventListener('auxclick', e=>e.preventDefault());
