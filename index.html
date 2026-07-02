@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>신의 손 — 문명의 하늘</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#000;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;user-select:none;}
+  #c{display:block;width:100vw;height:100vh;}
+  .panel{position:fixed;background:rgba(10,14,28,.72);color:#fff;border:1px solid rgba(255,255,255,.15);
+         border-radius:12px;padding:10px 14px;backdrop-filter:blur(6px);font-size:13px;z-index:10;}
+  #topLeft{top:12px;left:12px;}
+  #topLeft h1{margin:0 0 4px;font-size:17px;letter-spacing:1px;}
+  #eraName{font-size:15px;font-weight:bold;color:#ffd86b;}
+  #eraYear{font-size:12px;opacity:.8;}
+  #topRight{top:12px;right:12px;text-align:right;min-width:230px;}
+  #clockLine{font-size:14px;margin-bottom:6px;}
+  #speedVal{display:inline-block;width:46px;text-align:center;color:#7fd4ff;font-weight:bold;}
+  input[type=range]{width:170px;vertical-align:middle;accent-color:#ffb84d;}
+  #bottomLeft{bottom:12px;left:12px;}
+  #bottomRight{bottom:12px;right:12px;max-width:270px;display:none;}
+  #helpBar{bottom:12px;left:50%;transform:translateX(-50%);font-size:11.5px;opacity:.85;white-space:nowrap;}
+  button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;
+         padding:6px 10px;margin:2px;cursor:pointer;font-size:13px;font-family:inherit;transition:background .15s;}
+  button:hover{background:rgba(255,255,255,.28);}
+  button.on{background:#ffb84d;color:#222;border-color:#ffb84d;font-weight:bold;}
+  #rocketBtn{display:none;background:linear-gradient(90deg,#ff7b4d,#ffb84d);color:#221;font-weight:bold;}
+  #moonBtn{display:none;background:linear-gradient(90deg,#4d8cff,#7fd4ff);color:#112;font-weight:bold;}
+  #banner{position:fixed;top:70px;left:50%;transform:translateX(-50%);font-size:22px;font-weight:bold;color:#fff;
+          background:rgba(20,10,40,.8);border:1px solid rgba(255,215,120,.5);border-radius:14px;padding:12px 26px;
+          z-index:20;opacity:0;transition:opacity .5s;pointer-events:none;text-shadow:0 2px 8px #000;}
+  #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 1s;z-index:50;}
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:49;}
+  #loadMsg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#889;
+           font-size:15px;z-index:5;}
+  .sect{margin-top:6px;border-top:1px solid rgba(255,255,255,.12);padding-top:6px;}
+  .lbl{font-size:11px;opacity:.65;margin-right:4px;}
+  #infoName{font-size:15px;font-weight:bold;color:#7fd4ff;}
+  #infoBody{font-size:12.5px;line-height:1.55;margin-top:4px;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="loadMsg">🌏 세계를 창조하는 중... (인터넷 연결이 필요합니다)</div>
+
+<div class="panel" id="topLeft">
+  <h1>🌏 신의 손</h1>
+  <div id="eraName">공룡시대</div>
+  <div id="eraYear">6,500만 년 전</div>
+  <div class="sect">
+    <span class="lbl">문명 시간</span><br>
+    <input type="range" id="eraSlider" min="0" max="8.99" step="0.01" value="0">
+  </div>
+</div>
+
+<div class="panel" id="topRight">
+  <div id="clockLine">🌸 봄 · ☀️ 한낮 12:00</div>
+  <div>
+    <button id="revBtn" title="시간 거꾸로">⏪</button>
+    <button id="pauseBtn" title="일시정지">⏸</button>
+    <button id="fwdBtn" title="빨리감기">⏩</button>
+    <span id="speedVal">x1.0</span>
+  </div>
+  <div><span class="lbl">속도</span><input type="range" id="speedSlider" min="-4" max="4" step="0.5" value="1"></div>
+</div>
+
+<div class="panel" id="bottomLeft">
+  <div>
+    <span class="lbl">재해</span>
+    <button id="windBtn">💨 바람</button>
+    <button id="quakeBtn">🌋 지진</button>
+    <button id="floodBtn">🌊 홍수</button>
+  </div>
+  <div class="sect">
+    <span class="lbl">내 크기</span>
+    <button id="scaleSky" class="on">🛰️ 하늘</button>
+    <button id="scaleGiant">🗿 거인</button>
+    <button id="scaleHuman">🚶 사람</button>
+    <button id="scaleBug">🐜 곤충</button>
+  </div>
+  <div class="sect">
+    <button id="rocketBtn">🚀 달나라로 발사!</button>
+    <button id="moonBtn">🌍 지구로 돌아가기</button>
+    <button id="muteBtn">🔊</button>
+  </div>
+</div>
+
+<div class="panel" id="bottomRight">
+  <div id="infoName">이름</div>
+  <div id="infoBody"></div>
+</div>
+
+<div class="panel" id="helpBar">🖱️ 휠: 확대/축소 · 휠 누르고 드래그: 각도 회전 · 왼쪽 드래그: 이동 · 사람 클릭: 정보 보기 · WASD: 이동</div>
+
+<div id="banner"></div>
+<div id="flash"></div>
+<div id="fade"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { Water } from 'three/addons/objects/Water.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+window.__gameLoaded = true;
+document.getElementById('loadMsg').style.display = 'none';
+
+/* ============================================================
+   기본 셋업
+============================================================ */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.9;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog('#87ceeb', 350, 1000);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.05, 5000);
+
+/* 후처리 — 블룸 */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.38, 0.55, 0.82);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+/* 물리 기반 하늘 */
+const skyDome = new Sky();
+skyDome.scale.setScalar(4500);
+scene.add(skyDome);
+const skyUni = skyDome.material.uniforms;
+skyUni.turbidity.value = 6;
+skyUni.rayleigh.value = 1.6;
+skyUni.mieCoefficient.value = 0.004;
+skyUni.mieDirectionalG.value = 0.85;
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+const worldRoot = new THREE.Group(); scene.add(worldRoot);   // 지구
+const moonRoot  = new THREE.Group(); moonRoot.visible = false; scene.add(moonRoot); // 달
+
+/* 조명 */
+const hemi = new THREE.HemisphereLight('#bcd8ff', '#4a5b3a', 0.5); scene.add(hemi);
+const sun = new THREE.DirectionalLight('#fff2d0', 1.2); scene.add(sun);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0004;
+const sc = sun.shadow.camera;
+sc.left=-260; sc.right=260; sc.top=260; sc.bottom=-260; sc.near=50; sc.far=1200;
+
+/* 금속·유리 재질용 환경 반사맵 */
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+}
+const amb = new THREE.AmbientLight('#ffffff', 0.35); scene.add(amb);
+
+/* 해/달 구체 */
+const sunBall = new THREE.Mesh(new THREE.SphereGeometry(16,16,16),
+  new THREE.MeshBasicMaterial({color:'#ffdd66', fog:false}));
+scene.add(sunBall);
+const moonBall = new THREE.Mesh(new THREE.SphereGeometry(11,16,16),
+  new THREE.MeshBasicMaterial({color:'#e8ecf5', fog:false}));
+scene.add(moonBall);
+
+/* 별 */
+const starGeo = new THREE.BufferGeometry();
+{
+  const pos = [];
+  for(let i=0;i<1300;i++){
+    const th = Math.random()*Math.PI*2, ph = Math.acos(Math.random()*0.95);
+    const r = 850;
+    pos.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph)+50, r*Math.sin(ph)*Math.sin(th));
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+}
+const starMat = new THREE.PointsMaterial({color:'#ffffff', size:1.6, transparent:true, opacity:0, fog:false, sizeAttenuation:false});
+const stars = new THREE.Points(starGeo, starMat); scene.add(stars);
+
+/* ============================================================
+   사운드 (WebAudio 신스)
+============================================================ */
+let actx=null, master=null, muted=false;
+function audio(){
+  if(!actx){
+    const AC = window.AudioContext||window.webkitAudioContext;
+    actx = new AC();
+    master = actx.createGain(); master.gain.value = 0.5; master.connect(actx.destination);
+  }
+  if(actx.state==='suspended') actx.resume();
+  return actx;
+}
+function beep(freq, dur=0.1, type='sine', gain=0.12, slideTo=0, delay=0){
+  if(muted||!actx) return;
+  const t0 = actx.currentTime + delay;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo), t0+dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g); g.connect(master);
+  o.start(t0); o.stop(t0+dur+0.05);
+}
+function noiseSound(dur=1, freq=400, gain=0.2, type='lowpass'){
+  if(muted||!actx) return;
+  const t0 = actx.currentTime;
+  const len = Math.floor(actx.sampleRate*dur);
+  const buf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  const src = actx.createBufferSource(); src.buffer = buf;
+  const f = actx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0+dur*0.15);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  src.connect(f); f.connect(g); g.connect(master);
+  src.start(t0);
+}
+function greetSound(){ beep(620,0.07,'square',0.05); beep(830,0.09,'square',0.05,0,0.09); }
+function chatterSound(){ for(let i=0;i<3;i++) beep(280+Math.random()*380, 0.06,'triangle',0.03,0,i*0.08); }
+function birdSound(){ beep(2400+Math.random()*600,0.07,'sine',0.03, 3300); }
+function cricketSound(){ for(let i=0;i<4;i++) beep(4200,0.03,'sine',0.02,0,i*0.07); }
+function dinoSound(){ beep(90,0.7,'sawtooth',0.12,45); noiseSound(0.6,180,0.08); }
+
+/* ============================================================
+   시간 · 계절 · 시대 시스템
+============================================================ */
+const ERAS = [
+  {name:'🦕 공룡시대',       year:'6,500만 년 전',   pop:0},
+  {name:'🔥 원시시대',       year:'기원전 1만 년',   pop:16},
+  {name:'🌾 농경시대',       year:'기원전 3000년',   pop:26},
+  {name:'🏰 중세시대',       year:'서기 1400년',     pop:38},
+  {name:'🏭 1차 산업혁명',   year:'1780년대',        pop:50},
+  {name:'⚡ 2차 산업혁명',   year:'1900년대',        pop:60},
+  {name:'💻 3차 정보화시대', year:'1990년대',        pop:70},
+  {name:'🤖 4차 AI시대',     year:'2030년대',        pop:78},
+  {name:'🚀 우주시대',       year:'2120년대',        pop:78},
+];
+const ERA_EVENTS = [
+  null,
+  '☄️ 운석 충돌! 공룡이 멸종하고 인류의 시대가 열립니다',
+  '🌾 농업 혁명 — 사람들이 정착해 농사를 짓기 시작합니다',
+  '🏰 중세 — 성과 풍차, 시장이 세워집니다',
+  '🏭 1차 산업혁명 — 증기기관과 공장의 시대!',
+  '⚡ 2차 산업혁명 — 전기·자동차·대량생산!',
+  '💻 3차 산업혁명 — 컴퓨터와 인터넷의 시대!',
+  '🤖 4차 산업혁명 — AI · 로봇 · 드론!',
+  '🚀 우주시대 — 이제 달까지 갈 수 있습니다!',
+];
+const JOBS = [
+  [],
+  ['사냥꾼','채집꾼','주술사','불지킴이'],
+  ['농부','목동','옹기장이','상인'],
+  ['농부','대장장이','기사','상인','방앗간지기'],
+  ['공장 노동자','기관사','방직공','발명가','상인'],
+  ['자동차 정비공','전기기사','은행원','교사','의사'],
+  ['프로그래머','회사원','요리사','기자','의사'],
+  ['AI 엔지니어','드론 조종사','로봇 정비사','유튜버','의사'],
+  ['우주비행사','로켓 엔지니어','관제사','과학자','의사'],
+];
+const SEASONS = ['🌸 봄','☀️ 여름','🍂 가을','❄️ 겨울'];
+const SURNAMES = ['김','이','박','최','정','강','조','윤','장','한'];
+const GIVEN = ['하늘','바다','별','구름','노을','미르','솔','들','봄','가을','빛','결','숲','샘','달','아라','늘','참','온','새롬'];
+const CHATS = ['오늘도 열심히!','날씨 참 좋네요~','배고프다...','우리 가족 최고!','일하러 가야지','콧노래가 나오네 🎵','저녁엔 뭐 먹지?'];
+const GREETS = ['안녕하세요!','반가워요~','좋은 아침!','밥 먹었어요?','안녕! 👋'];
+
+const state = {
+  eraFloat: 0,          // 0 ~ 8.99 (문명 진행도)
+  era: 0,
+  worldHours: 12,       // 누적 시간 (시각·계절 계산용)
+  speed: 1,             // 시간 배속 (음수 = 거꾸로)
+  onMoon: false,
+  launching: false,
+  wind: 0, windT: 0,
+  quakeT: 0,
+  floodT: 0, floodLevel: 0,
+};
+const ERA_SECONDS = 45;      // 1배속에서 시대 하나가 걸리는 실제 초
+const HOURS_PER_SEC = 24/50; // 1배속: 하루 = 50초
+
+function dayTime(){ return ((state.worldHours % 24)+24)%24; }
+function seasonFloat(){ return (((state.worldHours/24) % 4)+4)%4; }
+function seasonIdx(){ return Math.floor(seasonFloat()); }
+function timeLabel(){
+  const t = dayTime();
+  if(t<4.5) return '🌙 깊은 밤'; if(t<7) return '🌅 새벽'; if(t<11) return '🌤 아침';
+  if(t<15) return '☀️ 한낮'; if(t<18) return '🌇 오후'; if(t<20) return '🌆 노을'; return '🌙 밤';
+}
+
+/* ============================================================
+   지형 — 땅 · 강 · 산
+============================================================ */
+const groundMat = new THREE.MeshStandardMaterial({color:'#5aa84f', roughness:1, metalness:0});
+const groundGeo = new THREE.PlaneGeometry(900,900,72,72);
+function riverX(z){ return Math.sin(z*0.012)*70; }
+const RIVER_W = 24;
+{ // 외곽에 완만한 언덕 노이즈 (도시·강 지역은 평평하게)
+  const pos = groundGeo.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const x = pos.getX(i), wz = -pos.getY(i);
+    const r = Math.hypot(x, wz);
+    if(r>175 && Math.abs(x - riverX(wz)) > RIVER_W/2 + 24){
+      const f = Math.min(1,(r-175)/90);
+      pos.setZ(i, (Math.sin(x*0.045)+Math.cos(wz*0.05)+Math.sin((x+wz)*0.021))*1.4*f);
+    }
+  }
+  groundGeo.computeVertexNormals();
+}
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
+worldRoot.add(ground);
+
+/* 실시간 반사 물 (Three.js Water 애드온) */
+const waterNormals = new THREE.TextureLoader().load(
+  'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/waternormals.jpg',
+  t=>{ t.wrapS = t.wrapT = THREE.RepeatWrapping; });
+function makeWater(geo, color){
+  const w = new Water(geo, {
+    textureWidth: 512, textureHeight: 512,
+    waterNormals,
+    sunDirection: new THREE.Vector3(0.3,1,0.2),
+    sunColor: 0xffffff, waterColor: color,
+    distortionScale: 2.2, fog: true,
+  });
+  return w;
+}
+let riverWater;
+{
+  const pts = [];
+  for(let z=-450; z<=450; z+=10){
+    const x = riverX(z);
+    const dz = 10, dx = riverX(z+dz)-x;
+    const len = Math.hypot(dx,dz);
+    const nx = dz/len, nz = -dx/len; // 법선
+    pts.push([x-nx*RIVER_W/2, z-nz*RIVER_W/2, x+nx*RIVER_W/2, z+nz*RIVER_W/2]);
+  }
+  // Water 애드온은 XY 평면(+Z 법선) 지오메트리를 기대 → XY로 만들고 메시를 눕힌다
+  const verts=[], idx=[];
+  pts.forEach((p,i)=>{ verts.push(p[0],-p[1],0, p[2],-p[3],0);
+    if(i>0){ const a=(i-1)*2; idx.push(a,a+2,a+1, a+1,a+2,a+3); } });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(verts,3));
+  g.setIndex(idx); g.computeVertexNormals();
+  riverWater = makeWater(g, 0x1f6fc4);
+  riverWater.rotation.x = -Math.PI/2;
+  riverWater.position.y = 0.15;
+  worldRoot.add(riverWater);
+}
+function nearRiver(x,z,margin=16){ return Math.abs(x - riverX(z)) < RIVER_W/2 + margin; }
+
+/* 산 (외곽) */
+const snowCapMats = [];
+for(let i=0;i<16;i++){
+  const a = i/16*Math.PI*2 + Math.random()*0.3;
+  const r = 330 + Math.random()*70;
+  const h = 60+Math.random()*90;
+  const mtn = new THREE.Mesh(new THREE.ConeGeometry(45+Math.random()*35, h, 7),
+    new THREE.MeshLambertMaterial({color:'#6b705c'}));
+  mtn.position.set(Math.cos(a)*r, h/2-2, Math.sin(a)*r);
+  worldRoot.add(mtn);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(16, h*0.3, 7),
+    new THREE.MeshLambertMaterial({color:'#ffffff'}));
+  cap.position.set(mtn.position.x, h*0.85, mtn.position.z);
+  snowCapMats.push(cap.material);
+  worldRoot.add(cap);
+}
+
+/* 홍수 물 */
+const floodMat = new THREE.MeshStandardMaterial({color:'#2f7fd4', transparent:true, opacity:0.75, roughness:0.2});
+const floodWater = new THREE.Mesh(new THREE.PlaneGeometry(900,900), floodMat);
+floodWater.rotation.x = -Math.PI/2; floodWater.position.y = -3; floodWater.visible = false;
+worldRoot.add(floodWater);
+
+/* ============================================================
+   나무 (계절 반영)
+============================================================ */
+const trunkGeo = new THREE.CylinderGeometry(0.35,0.5,3,6);
+const trunkMat = new THREE.MeshLambertMaterial({color:'#6b4a2f'});
+const folGeo = new THREE.ConeGeometry(2.4,5,7);
+const folGeoRound = new THREE.IcosahedronGeometry(2.6,1);
+const folMats = [ // 3가지 변주, 계절마다 색 갱신
+  new THREE.MeshLambertMaterial({color:'#2e8b3a'}),
+  new THREE.MeshLambertMaterial({color:'#3aa04a'}),
+  new THREE.MeshLambertMaterial({color:'#57b968'}),
+];
+const trees = [];
+function addTree(x,z,s=1){
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(trunkGeo, trunkMat); trunk.position.y = 1.5; trunk.castShadow = true;
+  const round = Math.random()<0.4;
+  const fol = new THREE.Mesh(round?folGeoRound:folGeo, folMats[Math.floor(Math.random()*3)]);
+  fol.position.y = round?4.6:5; fol.castShadow = true;
+  if(round) fol.scale.y = 0.85+Math.random()*0.3;
+  g.add(trunk, fol);
+  g.position.set(x,0,z); g.scale.setScalar(s*(0.7+Math.random()*0.7));
+  g.userData.phase = Math.random()*Math.PI*2;
+  worldRoot.add(g); trees.push(g);
+  return g;
+}
+{
+  // 숲 군락
+  const clusters = [];
+  for(let i=0;i<9;i++){
+    const a = Math.random()*Math.PI*2, r = 170+Math.random()*110;
+    clusters.push([Math.cos(a)*r, Math.sin(a)*r]);
+  }
+  clusters.forEach(c=>{
+    for(let i=0;i<22;i++){
+      const x = c[0]+(Math.random()-0.5)*55, z = c[1]+(Math.random()-0.5)*55;
+      if(!nearRiver(x,z) && Math.hypot(x,z)<310) addTree(x,z);
+    }
+  });
+  for(let i=0;i<50;i++){ // 도시 안 가로수
+    const x=(Math.random()-0.5)*280, z=(Math.random()-0.5)*280;
+    if(!nearRiver(x,z)) addTree(x,z,0.8);
+  }
+}
+function applySeasonColors(){
+  const sf = seasonFloat(), si = seasonIdx(), f = sf - si;
+  const PAL = {
+    ground: ['#6fbf5a','#4ca64c','#b98a3e','#e8ecf2'],
+    fol0:   ['#4fae4f','#2e8b3a','#e07b2a','#dfe6ee'],
+    fol1:   ['#7fca6a','#3aa04a','#d9a521','#cfd8e4'],
+    fol2:   ['#f4a7c3','#57b968','#c1512f','#eef2f7'], // 봄엔 벚꽃
+  };
+  const lerpC = (arr)=> new THREE.Color(arr[si]).lerp(new THREE.Color(arr[(si+1)%4]), f*f*(3-2*f));
+  groundMat.color.copy(lerpC(PAL.ground));
+  folMats[0].color.copy(lerpC(PAL.fol0));
+  folMats[1].color.copy(lerpC(PAL.fol1));
+  folMats[2].color.copy(lerpC(PAL.fol2));
+}
+
+/* 계절 파티클 (눈 / 낙엽 / 꽃잎) */
+const PARTS = 650;
+const partGeo = new THREE.BufferGeometry();
+const partPos = new Float32Array(PARTS*3);
+for(let i=0;i<PARTS;i++){
+  partPos[i*3] = (Math.random()-0.5)*500;
+  partPos[i*3+1] = Math.random()*130;
+  partPos[i*3+2] = (Math.random()-0.5)*500;
+}
+partGeo.setAttribute('position', new THREE.BufferAttribute(partPos,3));
+const partMat = new THREE.PointsMaterial({color:'#ffffff', size:1.4, transparent:true, opacity:0.9});
+const particles = new THREE.Points(partGeo, partMat);
+particles.visible = false; worldRoot.add(particles);
+
+/* ============================================================
+   도시 — 시대별 건물
+============================================================ */
+const cityRoot = new THREE.Group(); worldRoot.add(cityRoot);
+const roadsRoot = new THREE.Group(); roadsRoot.visible=false; worldRoot.add(roadsRoot);
+let buildings = [];   // {group, x, z, kind:'home'|'work'|'landmark'}
+let spinners = [];    // 풍차 날개 등
+let nightMeshes = []; // 밤에 켜지는 창문
+let smokeStacks = []; // 굴뚝 위치
+const slots = [];
+for(let gx=-3; gx<=3; gx++) for(let gz=-3; gz<=3; gz++){
+  if(gx===0 && gz===0) continue; // 중앙 광장
+  const x = gx*38 + (Math.random()-0.5)*10;
+  const z = gz*38 + (Math.random()-0.5)*10;
+  if(nearRiver(x,z)) continue;
+  if(Math.hypot(x-110, z-95)<30) continue; // 로켓 발사장 자리
+  slots.push({x, z, i: slots.length});
+}
+
+/* 도로 */
+{
+  const roadMat = new THREE.MeshLambertMaterial({color:'#3d4148'});
+  const lineMat = new THREE.MeshBasicMaterial({color:'#e8d44d'});
+  [-57,-19,19,57].forEach(p=>{
+    const r1 = new THREE.Mesh(new THREE.PlaneGeometry(7,270), roadMat);
+    r1.rotation.x=-Math.PI/2; r1.position.set(p,0.07,0); roadsRoot.add(r1);
+    const l1 = new THREE.Mesh(new THREE.PlaneGeometry(0.5,270), lineMat);
+    l1.rotation.x=-Math.PI/2; l1.position.set(p,0.08,0); roadsRoot.add(l1);
+    const r2 = new THREE.Mesh(new THREE.PlaneGeometry(270,7), roadMat);
+    r2.rotation.x=-Math.PI/2; r2.position.set(0,0.07,p); roadsRoot.add(r2);
+    const l2 = new THREE.Mesh(new THREE.PlaneGeometry(270,0.5), lineMat);
+    l2.rotation.x=-Math.PI/2; l2.position.set(0,0.08,p); roadsRoot.add(l2);
+  });
+}
+
+function box(w,h,d,color){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshLambertMaterial({color}));
+  m.castShadow = true; return m;
+}
+function cone(r,h,seg,color){
+  const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,seg), new THREE.MeshLambertMaterial({color}));
+  m.castShadow = true; return m;
+}
+function cyl(rt,rb,h,color,seg=8){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg), new THREE.MeshLambertMaterial({color}));
+  m.castShadow = true; return m;
+}
+function addWindows(g, w, h, d){
+  const wm = new THREE.MeshBasicMaterial({color:'#ffd977'});
+  for(let i=0;i<8;i++){
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(0.9,0.7), wm);
+    const side = Math.random()<0.5;
+    win.position.set(
+      side ? (Math.random()-0.5)*w*0.7 : (Math.random()<0.5?-1:1)*(w/2+0.02),
+      0.8 + Math.random()*(h-1.6),
+      side ? (Math.random()<0.5?-1:1)*(d/2+0.02) : (Math.random()-0.5)*d*0.7);
+    if(!side) win.rotation.y = Math.PI/2;
+    win.visible = false;
+    g.add(win); nightMeshes.push(win);
+  }
+}
+
+const builders = {
+  rock(s){ const g=new THREE.Group();
+    const r=new THREE.Mesh(new THREE.DodecahedronGeometry(1.6+Math.random()*1.6),
+      new THREE.MeshLambertMaterial({color:'#8a8f7e'}));
+    r.position.y=1; r.castShadow=true; g.add(r); return {g, kind:null}; },
+  teepee(s){ const g=new THREE.Group();
+    const t=cone(2.4,4.6,7,'#b08968'); t.position.y=2.3; g.add(t);
+    const fire=new THREE.Mesh(new THREE.ConeGeometry(0.5,1,6),
+      new THREE.MeshBasicMaterial({color:'#ff7a2a'}));
+    fire.position.set(3,0.5,1); g.add(fire);
+    return {g, kind:'home'}; },
+  mudHouse(s){ const g=new THREE.Group();
+    const b=box(4,2.5,4,'#cbb08a'); b.position.y=1.25; g.add(b);
+    const r=cone(3.2,1.8,4,'#a58a4d'); r.position.y=3.4; r.rotation.y=Math.PI/4; g.add(r);
+    return {g, kind:'home'}; },
+  farm(s){ const g=new THREE.Group();
+    const f=new THREE.Mesh(new THREE.PlaneGeometry(11,11), new THREE.MeshLambertMaterial({color:'#7a5a34'}));
+    f.rotation.x=-Math.PI/2; f.position.y=0.06; g.add(f);
+    for(let i=0;i<4;i++){ const row=box(10,0.35,0.7,'#6fae4f'); row.position.set(0,0.25,-4+i*2.6); g.add(row); }
+    return {g, kind:'work'}; },
+  medieval(s){ const g=new THREE.Group();
+    const b=box(4.2,3,4.2,'#e8dcc8'); b.position.y=1.5; g.add(b);
+    const r=cone(3.4,2.2,4,'#8b3a2f'); r.position.y=4.1; r.rotation.y=Math.PI/4; g.add(r);
+    const beam=box(0.3,3,4.3,'#5a4632'); beam.position.set(-2.05,1.5,0); g.add(beam);
+    return {g, kind:'home'}; },
+  castle(s){ const g=new THREE.Group();
+    const t=cyl(3.6,4,11,'#9aa0a8'); t.position.y=5.5; g.add(t);
+    const r=cone(4.2,4,8,'#3d5a99'); r.position.y=13; g.add(r);
+    const pole=cyl(0.08,0.08,3,'#333'); pole.position.y=16; g.add(pole);
+    const flag=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1),
+      new THREE.MeshBasicMaterial({color:'#d43a3a', side:THREE.DoubleSide}));
+    flag.position.set(0.8,17,0); g.add(flag);
+    return {g, kind:'landmark'}; },
+  windmill(s){ const g=new THREE.Group();
+    const t=cyl(1.6,2.2,7,'#d9cba8'); t.position.y=3.5; g.add(t);
+    const cap=cone(2,1.6,7,'#7a5a3a'); cap.position.y=7.6; g.add(cap);
+    const blades=new THREE.Group(); blades.position.set(0,7,2.1);
+    for(let i=0;i<4;i++){
+      const bl=box(0.5,5.5,0.1,'#e8e0cc'); bl.position.y=2.75;
+      const pivot=new THREE.Group(); pivot.rotation.z=i*Math.PI/2; pivot.add(bl); blades.add(pivot);
+    }
+    g.add(blades); spinners.push(blades);
+    return {g, kind:'work'}; },
+  factory(s){ const g=new THREE.Group();
+    const b=box(7,5,9,'#8d4a3b'); b.position.y=2.5; g.add(b);
+    const roof=box(7.4,0.5,9.4,'#5a3028'); roof.position.y=5.2; g.add(roof);
+    const ch=cyl(0.65,0.8,7,'#6e3a2e'); ch.position.set(2.2,7,-2.5); g.add(ch);
+    smokeStacks.push({x:0, y:10.5, z:0, parent:g, ox:2.2, oz:-2.5});
+    addWindows(g,7,5,9);
+    return {g, kind:'work'}; },
+  brickHouse(s){ const g=new THREE.Group();
+    const b=box(4.6,3.4,4.6,'#b5654a'); b.position.y=1.7; g.add(b);
+    const r=cone(3.6,2,4,'#4a3830'); r.position.y=4.4; r.rotation.y=Math.PI/4; g.add(r);
+    addWindows(g,4.6,3.4,4.6);
+    return {g, kind:'home'}; },
+  modern(s){ const h=6+(s.i%4)*3; const g=new THREE.Group();
+    const b=box(5,h,5,['#9fb2c4','#c4b59f','#aab8a0'][s.i%3]); b.position.y=h/2; g.add(b);
+    addWindows(g,5,h,5);
+    return {g, kind: s.i%3===0?'work':'home', h}; },
+  glassTower(s){ const h=10+(s.i%5)*5; const g=new THREE.Group();
+    const b=new THREE.Mesh(new THREE.BoxGeometry(5,h,5),
+      new THREE.MeshStandardMaterial({color:'#7fb6d9', roughness:0.15, metalness:0.6}));
+    b.position.y=h/2; b.castShadow=true; g.add(b);
+    addWindows(g,5,h,5);
+    return {g, kind: s.i%2===0?'work':'home', h}; },
+  future(s){ const h=12+(s.i%5)*6; const g=new THREE.Group();
+    const b=cyl(1.6,2.6,h,'#c8d4e8',6); b.position.y=h/2; g.add(b);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(2.6,0.18,6,24),
+      new THREE.MeshBasicMaterial({color:'#4de8ff'}));
+    ring.rotation.x=Math.PI/2; ring.position.y=h*0.75; g.add(ring);
+    const top=new THREE.Mesh(new THREE.SphereGeometry(1.7,10,10),
+      new THREE.MeshStandardMaterial({color:'#eef4ff', roughness:0.2, metalness:0.5}));
+    top.position.y=h+1; g.add(top);
+    addWindows(g,4,h,4);
+    return {g, kind: s.i%2===0?'work':'home', h}; },
+};
+
+/* 로켓 발사장 (시대 8) */
+const padRoot = new THREE.Group(); padRoot.position.set(110,0,95); padRoot.visible=false; worldRoot.add(padRoot);
+const rocket = new THREE.Group();
+{
+  const padC = new THREE.Mesh(new THREE.CylinderGeometry(14,14,0.6,24),
+    new THREE.MeshLambertMaterial({color:'#777d88'}));
+  padC.position.y=0.3; padRoot.add(padC);
+  const tower = box(1.4,22,1.4,'#c44'); tower.position.set(-6,11,0); padRoot.add(tower);
+  const body = cyl(1.6,1.6,14,'#f0f2f5',12); body.position.y=7.6; rocket.add(body);
+  const nose = cone(1.6,3.4,12,'#d43a3a'); nose.position.y=16.3; rocket.add(nose);
+  for(let i=0;i<3;i++){
+    const fin = box(0.25,3,2.4,'#d43a3a');
+    const a = i/3*Math.PI*2;
+    fin.position.set(Math.cos(a)*1.7, 1.8, Math.sin(a)*1.7);
+    fin.rotation.y = -a; rocket.add(fin);
+  }
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(1.3,5,10),
+    new THREE.MeshBasicMaterial({color:'#ffab3a', transparent:true, opacity:0.95}));
+  flame.rotation.x = Math.PI; flame.position.y = -2; flame.visible = false;
+  flame.name = 'flame'; rocket.add(flame);
+  padRoot.add(rocket);
+}
+
+/* 연기 파티클 */
+const smokeTex = (()=>{
+  const cv = document.createElement('canvas'); cv.width=cv.height=64;
+  const ctx = cv.getContext('2d');
+  const grd = ctx.createRadialGradient(32,32,4,32,32,30);
+  grd.addColorStop(0,'rgba(200,200,200,0.85)'); grd.addColorStop(1,'rgba(200,200,200,0)');
+  ctx.fillStyle=grd; ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(cv);
+})();
+const smokeSprites = [];
+for(let i=0;i<36;i++){
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex, transparent:true, opacity:0}));
+  sp.scale.setScalar(3); sp.visible=false; worldRoot.add(sp);
+  smokeSprites.push({sp, t:Math.random(), stack:-1});
+}
+
+/* 자동차 & 드론 */
+const cars = [], drones = [];
+const carsRoot = new THREE.Group(); worldRoot.add(carsRoot);
+const dronesRoot = new THREE.Group(); worldRoot.add(dronesRoot);
+function buildCars(n){
+  carsRoot.clear(); cars.length = 0;
+  const lines = [-57,-19,19,57];
+  const colors = ['#d43a3a','#3a6bd4','#e8b93a','#3aa06a','#eee','#555'];
+  for(let i=0;i<n;i++){
+    const g = new THREE.Group();
+    const body = box(1.6,0.8,3.2,colors[i%colors.length]); body.position.y=0.7; g.add(body);
+    const cab = box(1.4,0.6,1.6,'#bcd8ee'); cab.position.set(0,1.3,-0.2); g.add(cab);
+    const axis = Math.random()<0.5 ? 'x':'z';
+    const c = {g, axis, line:lines[i%4]+(Math.random()<0.5?-1.8:1.8), t:(Math.random()-0.5)*260, dir:Math.random()<0.5?1:-1, speed:9+Math.random()*8};
+    if(axis==='x') g.rotation.y = c.dir>0 ? Math.PI/2 : -Math.PI/2;
+    else g.rotation.y = c.dir>0 ? 0 : Math.PI;
+    carsRoot.add(g); cars.push(c);
+  }
+}
+function buildDrones(n){
+  dronesRoot.clear(); drones.length = 0;
+  for(let i=0;i<n;i++){
+    const g = new THREE.Group();
+    const body = box(1,0.4,1,'#39424e'); g.add(body);
+    const light = new THREE.Mesh(new THREE.SphereGeometry(0.2,6,6),
+      new THREE.MeshBasicMaterial({color:'#4de8ff'}));
+    light.position.y=-0.3; g.add(light);
+    const d = {g, cx:(Math.random()-0.5)*200, cz:(Math.random()-0.5)*200, r:12+Math.random()*25,
+               h:22+Math.random()*20, a:Math.random()*Math.PI*2, sp:0.3+Math.random()*0.5};
+    dronesRoot.add(g); drones.push(d);
+  }
+}
+
+function buildCity(era){
+  cityRoot.clear();
+  buildings = []; spinners = []; nightMeshes = []; smokeStacks = [];
+  const put = (s, name)=>{
+    const {g, kind} = builders[name](s);
+    g.position.set(s.x, 0, s.z);
+    g.rotation.y = Math.random()*Math.PI*2;
+    cityRoot.add(g);
+    if(kind) buildings.push({group:g, x:s.x, z:s.z, kind, baseY:0});
+  };
+  slots.forEach(s=>{
+    const ring = Math.max(Math.abs(Math.round(s.x/38)), Math.abs(Math.round(s.z/38)));
+    switch(era){
+      case 0: if(s.i%3===0) put(s,'rock'); break;
+      case 1: if(s.i%2===0) put(s,'teepee'); break;
+      case 2: put(s, (ring>=2 && s.i%3===0) ? 'farm' : 'mudHouse'); break;
+      case 3:
+        if(s.i===Math.floor(slots.length/2)) put(s,'castle');
+        else if(s.i%7===0) put(s,'windmill');
+        else if(ring>=2 && s.i%4===0) put(s,'farm');
+        else put(s,'medieval');
+        break;
+      case 4: put(s, s.i%4===0 ? 'factory' : 'brickHouse'); break;
+      case 5: put(s, s.i%5===0 ? 'factory' : (ring<=1 ? 'modern':'brickHouse')); break;
+      case 6: put(s, ring<=1 ? 'glassTower' : 'modern'); break;
+      case 7: case 8: put(s, ring<=1 ? 'future' : (s.i%2===0?'glassTower':'modern')); break;
+    }
+  });
+  roadsRoot.visible = era>=5;
+  padRoot.visible = era>=8;
+  document.getElementById('rocketBtn').style.display = (era>=8 && !state.onMoon) ? 'inline-block':'none';
+  buildCars(era>=5 ? (era>=6?14:8) : 0);
+  buildDrones(era>=7 ? 10 : 0);
+  buildPeople(era);
+  buildAnimals(era);
+}
+
+/* ============================================================
+   사람들
+============================================================ */
+const peopleRoot = new THREE.Group(); worldRoot.add(peopleRoot);
+const people = [];
+const bodyGeo = new THREE.CapsuleGeometry(0.35,0.9,3,8);
+const headGeo = new THREE.SphereGeometry(0.32,10,10);
+const skinMat = new THREE.MeshLambertMaterial({color:'#f0c8a0'});
+const JOB_COLORS = ['#d4573a','#3a6bd4','#3aa06a','#b93ad4','#d4b23a','#3ac4d4','#888','#e88'];
+
+function makePersonMesh(colorIdx){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(bodyGeo, new THREE.MeshLambertMaterial({color:JOB_COLORS[colorIdx%JOB_COLORS.length]}));
+  body.position.y = 0.95; body.castShadow = true; g.add(body);
+  const head = new THREE.Mesh(headGeo, skinMat); head.position.y = 1.85; g.add(head);
+  return g;
+}
+function buildPeople(era){
+  peopleRoot.clear(); people.length = 0;
+  const jobs = JOBS[era]; const n = ERAS[era].pop;
+  if(!jobs.length || !n) return;
+  const homes = buildings.filter(b=>b.kind==='home');
+  const works = buildings.filter(b=>b.kind==='work');
+  if(!homes.length) return;
+  // 가족 단위로 배치 (한 집에 2~4명)
+  let hi = 0;
+  const homeMembers = new Map();
+  for(let i=0;i<n;i++){
+    const jobIdx = i%jobs.length;
+    const home = homes[hi%homes.length];
+    if((i+1)%(2+Math.floor(Math.random()*3))===0) hi++;
+    const mesh = makePersonMesh(jobIdx);
+    const name = SURNAMES[Math.floor(Math.random()*SURNAMES.length)]+GIVEN[Math.floor(Math.random()*GIVEN.length)];
+    const work = works.length ? works[Math.floor(Math.random()*works.length)] : null;
+    const p = {
+      mesh, name, job: jobs[jobIdx],
+      home, work,
+      x: home.x+(Math.random()-0.5)*8, z: home.z+(Math.random()-0.5)*8,
+      tx:0, tz:0, speed: 2+Math.random(),
+      wanderT: Math.random()*4, greetCd: 0, pauseT: 0, panic: false,
+      phase: Math.random()*Math.PI*2, state:'집',
+    };
+    p.tx = p.x; p.tz = p.z;
+    mesh.position.set(p.x,0,p.z);
+    mesh.traverse(o=>{ o.userData.person = p; });
+    peopleRoot.add(mesh); people.push(p);
+    if(!homeMembers.has(home)) homeMembers.set(home,[]);
+    homeMembers.get(home).push(p);
+  }
+  people.forEach(p=>{ p.family = (homeMembers.get(p.home)||[]).filter(q=>q!==p); });
+}
+
+/* ============================================================
+   동물 & 공룡
+============================================================ */
+const animalRoot = new THREE.Group(); worldRoot.add(animalRoot);
+const animals = [];
+function makeQuad(color, s, isDino=false, longNeck=false){
+  const g = new THREE.Group();
+  const body = box(1.2*s, 0.8*s, 2.2*s, color); body.position.y = 0.9*s; g.add(body);
+  for(const [lx,lz] of [[-0.4,0.8],[0.4,0.8],[-0.4,-0.8],[0.4,-0.8]]){
+    const leg = cyl(0.14*s,0.14*s,0.9*s,color,5);
+    leg.position.set(lx*s, 0.45*s, lz*s); g.add(leg);
+  }
+  if(longNeck){
+    const neck = cyl(0.22*s,0.3*s,2.6*s,color,6);
+    neck.position.set(0, 2.1*s, 1.3*s); neck.rotation.x = -0.5; g.add(neck);
+    const head = box(0.55*s,0.45*s,0.8*s,color); head.position.set(0, 3.2*s, 2.05*s); g.add(head);
+    const tail = cone(0.3*s, 2.4*s, 6, color); tail.rotation.x = 1.9;
+    tail.position.set(0, 0.9*s, -2.2*s); g.add(tail);
+  } else {
+    const head = box(0.6*s,0.55*s,0.7*s,color); head.position.set(0, 1.3*s, 1.4*s); g.add(head);
+    if(isDino){
+      const tail = cone(0.25*s, 1.8*s, 6, color); tail.rotation.x = 1.8;
+      tail.position.set(0, 0.8*s, -1.9*s); g.add(tail);
+    }
+  }
+  return g;
+}
+function buildAnimals(era){
+  animalRoot.clear(); animals.length = 0;
+  const spawn = (mesh, s)=>{
+    let x,z;
+    do { x=(Math.random()-0.5)*380; z=(Math.random()-0.5)*380; } while(nearRiver(x,z,6));
+    mesh.position.set(x,0,z);
+    animalRoot.add(mesh);
+    animals.push({mesh, x, z, tx:x, tz:z, speed:s, t:Math.random()*5, dino: era===0});
+  };
+  if(era===0){
+    for(let i=0;i<5;i++) spawn(makeQuad('#5a8a4a', 3.2, true, true), 1.6);   // 브라키오사우루스
+    for(let i=0;i<4;i++) spawn(makeQuad('#8a6a3a', 1.8, true, false), 3.2); // 랩터류
+    // 고사리 거대 식물
+    for(let i=0;i<26;i++){
+      let x=(Math.random()-0.5)*360, z=(Math.random()-0.5)*360;
+      if(nearRiver(x,z)) continue;
+      const fern = cone(1.8,4.5,5,'#3a7a3a'); fern.position.set(x,2.2,z);
+      animalRoot.add(fern);
+    }
+  } else {
+    for(let i=0;i<7;i++) spawn(makeQuad('#a5703f', 0.9), 2.2);  // 사슴
+    for(let i=0;i<6;i++) spawn(makeQuad('#f0ede4', 0.45), 3);   // 토끼
+    if(era>=2) for(let i=0;i<4;i++) spawn(makeQuad('#7a6a5a', 0.7), 2.6); // 개
+  }
+}
+
+/* ============================================================
+   말풍선
+============================================================ */
+const bubbles = [];
+function showBubble(x, y, z, text, life=2.2){
+  const cv = document.createElement('canvas'); cv.width=320; cv.height=110;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle='rgba(255,255,255,0.94)';
+  ctx.beginPath(); ctx.roundRect(6,6,308,74,18); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(140,80); ctx.lineTo(180,80); ctx.lineTo(160,104); ctx.fill();
+  ctx.fillStyle='#222'; ctx.font='bold 34px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text, 160, 44);
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true}));
+  sp.position.set(x, y, z);
+  worldRoot.add(sp);
+  bubbles.push({sp, life, total:life});
+}
+
+/* ============================================================
+   달 세계
+============================================================ */
+const astronaut = new THREE.Group();
+{
+  const mg = new THREE.Mesh(new THREE.CircleGeometry(400, 48),
+    new THREE.MeshLambertMaterial({color:'#9a9aa2'}));
+  mg.rotation.x = -Math.PI/2; mg.receiveShadow = true; moonRoot.add(mg);
+  // 크레이터
+  for(let i=0;i<26;i++){
+    const r = 3+Math.random()*12;
+    const cr = new THREE.Mesh(new THREE.CircleGeometry(r, 20),
+      new THREE.MeshLambertMaterial({color:'#7e7e88'}));
+    cr.rotation.x = -Math.PI/2; cr.position.set((Math.random()-0.5)*600,0.02,(Math.random()-0.5)*600);
+    moonRoot.add(cr);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.6, 6, 24),
+      new THREE.MeshLambertMaterial({color:'#b0b0ba'}));
+    rim.rotation.x = Math.PI/2; rim.position.copy(cr.position); rim.position.y=0.3;
+    moonRoot.add(rim);
+  }
+  // 지구
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(22, 24, 24),
+    new THREE.MeshBasicMaterial({color:'#3a7bd4', fog:false}));
+  earth.position.set(130, 170, -260); moonRoot.add(earth);
+  const land = new THREE.Mesh(new THREE.SphereGeometry(22.15, 12, 12),
+    new THREE.MeshBasicMaterial({color:'#3aa05a', wireframe:true, transparent:true, opacity:0.5, fog:false}));
+  land.position.copy(earth.position); moonRoot.add(land);
+  // 착륙선
+  const lander = new THREE.Group();
+  const lb = cyl(2.2,2.6,2.4,'#c8b93a',8); lb.position.y=2.4; lander.add(lb);
+  const lt = new THREE.Mesh(new THREE.SphereGeometry(1.7,10,8),
+    new THREE.MeshStandardMaterial({color:'#d8dde5', metalness:0.6, roughness:0.3}));
+  lt.position.y=4.4; lander.add(lt);
+  for(let i=0;i<4;i++){
+    const a=i/4*Math.PI*2+0.4;
+    const leg=cyl(0.12,0.12,3,'#888',5);
+    leg.position.set(Math.cos(a)*2.6,1.2,Math.sin(a)*2.6); leg.rotation.z=Math.cos(a)*0.5; leg.rotation.x=-Math.sin(a)*0.5;
+    lander.add(leg);
+  }
+  lander.position.set(8,0,-4); moonRoot.add(lander);
+  // 태극기
+  const pole = cyl(0.06,0.06,4,'#ccc',5); pole.position.set(-5,2,-2); moonRoot.add(pole);
+  const flagCv = document.createElement('canvas'); flagCv.width=120; flagCv.height=80;
+  const fx = flagCv.getContext('2d');
+  fx.fillStyle='#fff'; fx.fillRect(0,0,120,80);
+  fx.fillStyle='#cd2e3a'; fx.beginPath(); fx.arc(60,40,20,Math.PI,0); fx.fill();
+  fx.fillStyle='#0047a0'; fx.beginPath(); fx.arc(60,40,20,0,Math.PI); fx.fill();
+  fx.fillStyle='#cd2e3a'; fx.beginPath(); fx.arc(50,40,10,0,Math.PI*2); fx.fill();
+  fx.fillStyle='#0047a0'; fx.beginPath(); fx.arc(70,40,10,0,Math.PI*2); fx.fill();
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(3,2),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(flagCv), side:THREE.DoubleSide}));
+  flag.position.set(-3.4,3.4,-2); flag.name='moonFlag'; moonRoot.add(flag);
+  // 우주인
+  const suit = new THREE.Mesh(bodyGeo, new THREE.MeshLambertMaterial({color:'#f2f4f8'}));
+  suit.position.y=0.95; astronaut.add(suit);
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.42,12,12),
+    new THREE.MeshStandardMaterial({color:'#f2f4f8', roughness:0.3}));
+  helmet.position.y=1.85; astronaut.add(helmet);
+  const visor = new THREE.Mesh(new THREE.SphereGeometry(0.3,10,10),
+    new THREE.MeshBasicMaterial({color:'#e8b93a'}));
+  visor.position.set(0,1.85,0.2); astronaut.add(visor);
+  const pack = box(0.5,0.7,0.3,'#c8ccd4'); pack.position.set(0,1.2,-0.4); astronaut.add(pack);
+  astronaut.position.set(0,0,4); moonRoot.add(astronaut);
+}
+const moonState = {vx:0, vz:0, hop:0};
+
+/* ============================================================
+   카메라 컨트롤 — 휠: 줌 / 휠드래그: 각도 / 좌드래그: 이동
+============================================================ */
+const cam = {
+  target: new THREE.Vector3(0,0,0),
+  dist: 320, theta: 0.7, phi: 0.95,
+  minDist: 1.1, maxDist: 750,
+};
+function applyCamera(){
+  cam.phi = Math.max(0.08, Math.min(1.53, cam.phi));
+  cam.dist = Math.max(cam.minDist, Math.min(cam.maxDist, cam.dist));
+  if(!state.onMoon){
+    cam.target.x = Math.max(-300, Math.min(300, cam.target.x));
+    cam.target.z = Math.max(-300, Math.min(300, cam.target.z));
+  }
+  cam.target.y = Math.max(0, cam.target.y);
+  const cp = Math.cos(cam.phi), sp = Math.sin(cam.phi);
+  camera.position.set(
+    cam.target.x + cam.dist*cp*Math.sin(cam.theta),
+    cam.target.y + cam.dist*sp + 0.5,
+    cam.target.z + cam.dist*cp*Math.cos(cam.theta));
+  camera.lookAt(cam.target.x, cam.target.y+0.5, cam.target.z);
+}
+let dragBtn = -1, lastX=0, lastY=0, downX=0, downY=0;
+canvas.addEventListener('pointerdown', e=>{
+  audio();
+  dragBtn = e.button; lastX=downX=e.clientX; lastY=downY=e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e=>{
+  if(dragBtn<0) return;
+  const dx = e.clientX-lastX, dy = e.clientY-lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  if(dragBtn===1){            // 휠(가운데) 드래그: 각도
+    cam.theta -= dx*0.005;
+    cam.phi   += dy*0.005;
+  } else if(dragBtn===0){     // 좌드래그: 이동
+    const k = cam.dist*0.0016;
+    const st = Math.sin(cam.theta), ct = Math.cos(cam.theta);
+    cam.target.x -= (dx*ct - dy*st)*k;
+    cam.target.z -= (-dx*st - dy*ct)*k;
+  } else if(dragBtn===2){     // 우드래그: 각도 (보조)
+    cam.theta -= dx*0.005; cam.phi += dy*0.005;
+  }
+});
+canvas.addEventListener('pointerup', e=>{
+  const moved = Math.hypot(e.clientX-downX, e.clientY-downY);
+  if(dragBtn===0 && moved<6) pickPerson(e);
+  dragBtn = -1;
+});
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  cam.dist *= 1 + Math.sign(e.deltaY)*0.11;
+}, {passive:false});
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+canvas.addEventListener('auxclick', e=>e.preventDefault());
+
+const keys = {};
+addEventListener('keydown', e=>{ keys[e.key.toLowerCase()]=true; });
+addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+
+/* 크기 모드 */
+const scaleBtns = {scaleSky:320, scaleGiant:55, scaleHuman:6.5, scaleBug:1.3};
+Object.keys(scaleBtns).forEach(id=>{
+  document.getElementById(id).addEventListener('click', ()=>{
+    document.querySelectorAll('#bottomLeft .sect button').forEach(b=>b.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    cam.dist = scaleBtns[id];
+    if(id==='scaleBug'){ cam.phi = 0.25; }
+    else if(id==='scaleHuman'){ cam.phi = 0.3; }
+    else if(id==='scaleGiant'){ cam.phi = 0.55; }
+    else cam.phi = 0.95;
+  });
+});
+
+/* 사람 클릭 → 정보 */
+const raycaster = new THREE.Raycaster();
+function pickPerson(e){
+  if(state.onMoon) return;
+  const m = new THREE.Vector2((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
+  raycaster.setFromCamera(m, camera);
+  const hits = raycaster.intersectObjects(peopleRoot.children, true);
+  const panel = document.getElementById('bottomRight');
+  if(hits.length && hits[0].object.userData.person){
+    const p = hits[0].object.userData.person;
+    document.getElementById('infoName').textContent = `👤 ${p.name}`;
+    const fam = p.family && p.family.length ? p.family.map(f=>f.name).join(', ') : '(독신 가구)';
+    document.getElementById('infoBody').innerHTML =
+      `직업: <b>${p.job}</b><br>가족: ${fam}<br>지금: <b>${p.state}</b><br>` +
+      `한마디: "${CHATS[Math.floor(Math.random()*CHATS.length)]}"`;
+    panel.style.display = 'block';
+    showBubble(p.x, 3.2, p.z, GREETS[Math.floor(Math.random()*GREETS.length)]);
+    greetSound();
+    clearTimeout(panel._t);
+    panel._t = setTimeout(()=>panel.style.display='none', 7000);
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   UI — 시간 · 재해 · 로켓
+============================================================ */
+const bannerEl = document.getElementById('banner');
+let bannerT = null;
+function banner(text, ms=4200){
+  bannerEl.textContent = text; bannerEl.style.opacity = 1;
+  clearTimeout(bannerT);
+  bannerT = setTimeout(()=>bannerEl.style.opacity=0, ms);
+}
+const speedSlider = document.getElementById('speedSlider');
+const eraSlider = document.getElementById('eraSlider');
+function setSpeed(v){
+  state.speed = v;
+  speedSlider.value = v;
+  document.getElementById('speedVal').textContent = 'x'+v.toFixed(1);
+  document.getElementById('pauseBtn').textContent = v===0 ? '▶' : '⏸';
+}
+speedSlider.addEventListener('input', ()=>setSpeed(parseFloat(speedSlider.value)));
+document.getElementById('pauseBtn').addEventListener('click', ()=>setSpeed(state.speed===0?1:0));
+document.getElementById('fwdBtn').addEventListener('click', ()=>setSpeed(Math.min(4, (state.speed||1)+1)));
+document.getElementById('revBtn').addEventListener('click', ()=>setSpeed(Math.max(-4, (state.speed||-1)-1)));
+eraSlider.addEventListener('input', ()=>{ state.eraFloat = parseFloat(eraSlider.value); });
+document.getElementById('muteBtn').addEventListener('click', e=>{
+  muted = !muted; e.target.textContent = muted ? '🔇':'🔊';
+});
+
+/* 재해 */
+document.getElementById('windBtn').addEventListener('click', ()=>{
+  audio(); state.windT = 9;
+  banner('💨 신이 거대한 바람을 일으켰습니다!');
+  noiseSound(7, 600, 0.22, 'bandpass');
+});
+document.getElementById('quakeBtn').addEventListener('click', ()=>{
+  audio(); state.quakeT = 8;
+  banner('🌋 대지진이 도시를 뒤흔듭니다!');
+  noiseSound(6, 110, 0.4);
+  buildings.forEach(b=>{
+    if(Math.random()<0.28 && b.kind!=='landmark'){
+      b.collapsing = true; b.collapseT = 0;
+      b.fallDir = Math.random()*Math.PI*2;
+    }
+  });
+  people.forEach(p=>{ p.panic = true; p.panicT = 10; });
+});
+document.getElementById('floodBtn').addEventListener('click', ()=>{
+  audio(); state.floodT = 16;
+  banner('🌊 강이 범람합니다! 대홍수!');
+  noiseSound(4, 900, 0.25);
+  people.forEach(p=>{ p.panic = true; p.panicT = 14; });
+});
+
+/* 로켓 발사 → 달 */
+document.getElementById('rocketBtn').addEventListener('click', ()=>{
+  if(state.launching || state.onMoon) return;
+  audio();
+  state.launching = true; state.launchT = 0;
+  rocket.getObjectByName('flame').visible = true;
+  banner('🚀 3... 2... 1... 발사!');
+  noiseSound(6, 220, 0.5);
+  beep(60, 4, 'sawtooth', 0.15, 200);
+});
+document.getElementById('moonBtn').addEventListener('click', ()=>{ travel(false); });
+
+const fadeEl = document.getElementById('fade');
+function travel(toMoon){
+  fadeEl.style.opacity = 1;
+  setTimeout(()=>{
+    state.onMoon = toMoon;
+    worldRoot.visible = !toMoon;
+    moonRoot.visible = toMoon;
+    sunBall.visible = moonBall.visible = !toMoon;
+    document.getElementById('rocketBtn').style.display = (!toMoon && state.era>=8) ? 'inline-block':'none';
+    document.getElementById('moonBtn').style.display = toMoon ? 'inline-block':'none';
+    skyDome.visible = !toMoon;
+    if(toMoon){
+      scene.background = new THREE.Color('#000005');
+      scene.fog.near = 5000; scene.fog.far = 9000;
+      starMat.opacity = 1;
+      sun.intensity = 1.4; amb.intensity = 0.25; hemi.intensity = 0.15;
+      sun.position.set(200, 300, 100);
+      astronaut.position.set(0,0,4);
+      cam.target.copy(astronaut.position); cam.dist = 12; cam.phi = 0.35;
+      banner('🌕 달 표면 — 고요의 바다에 도착했습니다! (WASD로 걷기)');
+      document.querySelectorAll('#bottomLeft .sect button').forEach(b=>b.classList.remove('on'));
+      document.getElementById('scaleHuman').classList.add('on');
+    } else {
+      scene.background = null;
+      sun.intensity = 1.2;
+      state.launching = false;
+      rocket.position.y = 0; rocket.getObjectByName('flame').visible = false;
+      cam.target.set(0,0,0); cam.dist = 320; cam.phi = 0.95;
+      banner('🌏 푸른 지구로 돌아왔습니다!');
+      document.querySelectorAll('#bottomLeft .sect button').forEach(b=>b.classList.remove('on'));
+      document.getElementById('scaleSky').classList.add('on');
+    }
+    fadeEl.style.opacity = 0;
+  }, 1100);
+}
+
+/* 운석 (공룡 멸종 이벤트) */
+let meteor = null;
+function spawnMeteor(){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(7,12,12),
+    new THREE.MeshBasicMaterial({color:'#ff6a2a'}));
+  m.position.set(250, 400, -220);
+  worldRoot.add(m);
+  meteor = {mesh:m, t:0};
+  noiseSound(2.5, 300, 0.3);
+}
+
+/* ============================================================
+   시대 전환
+============================================================ */
+let lastBuiltEra = -1;
+function checkEra(){
+  state.eraFloat = Math.max(0, Math.min(8.99, state.eraFloat));
+  eraSlider.value = state.eraFloat;
+  const e = Math.floor(state.eraFloat);
+  if(e !== state.era){
+    const forward = e > state.era;
+    state.era = e;
+    if(forward && ERA_EVENTS[e]){
+      banner(ERA_EVENTS[e], 5000);
+      if(e===1) spawnMeteor();
+      beep(520,0.15,'triangle',0.1); beep(660,0.15,'triangle',0.1,0,0.15); beep(880,0.3,'triangle',0.1,0,0.3);
+    } else if(!forward){
+      banner('⏪ 시간이 거꾸로 흐릅니다 — ' + ERAS[e].name);
+      beep(880,0.12,'triangle',0.08,440);
+    }
+  }
+  if(e !== lastBuiltEra){
+    lastBuiltEra = e;
+    buildCity(e);
+    document.getElementById('eraName').textContent = ERAS[e].name;
+    document.getElementById('eraYear').textContent = ERAS[e].year;
+  }
+}
+
+/* ============================================================
+   하늘 · 낮밤
+============================================================ */
+const SKY_KEYS = [
+  [0,   '#070b22'], [4.5, '#0d1435'], [6, '#f4976c'], [7.5, '#9ec7e8'],
+  [9,   '#87ceeb'], [16,  '#87ceeb'], [18, '#ffb36b'], [19.2,'#e2653a'],
+  [20.2,'#2a2050'], [21.5,'#070b22'], [24, '#070b22'],
+];
+const skyColor = new THREE.Color();
+function updateSky(){
+  const t = dayTime();
+  let a = SKY_KEYS[0], b = SKY_KEYS[SKY_KEYS.length-1];
+  for(let i=0;i<SKY_KEYS.length-1;i++){
+    if(t>=SKY_KEYS[i][0] && t<=SKY_KEYS[i+1][0]){ a=SKY_KEYS[i]; b=SKY_KEYS[i+1]; break; }
+  }
+  const f = (t-a[0])/Math.max(0.001, b[0]-a[0]);
+  skyColor.set(a[1]).lerp(new THREE.Color(b[1]), f);
+  if(!state.onMoon){
+    scene.fog.color.copy(skyColor);
+    scene.fog.near = 350; scene.fog.far = 1000;
+  }
+  // 해 위치
+  const ang = (t/24)*Math.PI*2 - Math.PI/2;
+  const sx = Math.cos(ang)*500, sy = Math.sin(ang)*500;
+  if(!state.onMoon){
+    sun.position.set(sx, Math.max(sy, -80), 150);
+    sunBall.position.set(cam.target.x + Math.cos(ang)*900, Math.sin(ang)*900, cam.target.z+250);
+    moonBall.position.set(cam.target.x - Math.cos(ang)*900, -Math.sin(ang)*900, cam.target.z-250);
+    const dayness = Math.max(0, Math.sin(ang));
+    sun.intensity = 0.25 + dayness*2.0;
+    sun.color.set('#ff9a4d').lerp(new THREE.Color('#fff3e0'), Math.min(1, dayness*2.5));
+    amb.intensity = 0.15 + dayness*0.3;
+    hemi.intensity = 0.12 + dayness*0.5;
+    starMat.opacity = Math.max(0, 0.9 - dayness*3);
+    renderer.toneMappingExposure = 0.42 + dayness*0.55;
+    // 물리 하늘 셰이더에 태양 방향 전달
+    skyUni.sunPosition.value.set(Math.cos(ang), Math.sin(ang), 0.28).normalize();
+    skyUni.rayleigh.value = 1.2 + Math.max(0, 1-Math.abs(Math.sin(ang))*3)*2.5; // 노을에 붉게
+    skyUni.mieCoefficient.value = 0.004 + Math.max(0, 0.35-dayness)*0.02;
+    // 물 반사에 태양 방향 전달
+    if(riverWater){
+      riverWater.material.uniforms.sunDirection.value.copy(sun.position).normalize();
+      riverWater.material.uniforms.sunColor.value.copy(sun.color);
+    }
+    const isNight = dayTime()<6 || dayTime()>19;
+    nightMeshes.forEach(w=>{ w.visible = isNight; });
+  }
+}
+
+/* ============================================================
+   메인 루프
+============================================================ */
+let greetTimer = 0, ambientTimer = 0;
+const clock = new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  const gdt = dt * state.speed; // 게임 시간 (음수 가능)
+  const t = clock.elapsedTime;
+
+  if(!state.onMoon){
+    state.worldHours += gdt * HOURS_PER_SEC; // 하루 = 50초(1배속)
+  }
+
+  if(!state.onMoon && !state.launching){
+    state.eraFloat += gdt / ERA_SECONDS;
+  }
+  checkEra();
+  updateSky();
+  applySeasonColors();
+
+  /* 계절 파티클 */
+  {
+    const si = seasonIdx();
+    if(si===3){ particles.visible=true; partMat.color.set('#ffffff'); partMat.size=1.5; }
+    else if(si===2){ particles.visible=true; partMat.color.set('#e07b2a'); partMat.size=1.2; }
+    else if(si===0){ particles.visible=true; partMat.color.set('#f4a7c3'); partMat.size=1.0; }
+    else particles.visible=false;
+    snowCapMats.forEach(m=>m.color.set(si===3?'#ffffff':'#e8ecf2'));
+    if(particles.visible){
+      const arr = partGeo.attributes.position.array;
+      const fall = si===3 ? 9 : 4;
+      for(let i=0;i<PARTS;i++){
+        arr[i*3+1] -= dt*fall*(0.6+((i*7)%10)/10);
+        arr[i*3]   += Math.sin(t*1.5+i)*dt*2 + state.wind*dt*20;
+        if(arr[i*3+1]<0){ arr[i*3+1]=130; arr[i*3]=(Math.random()-0.5)*500; arr[i*3+2]=(Math.random()-0.5)*500; }
+      }
+      partGeo.attributes.position.needsUpdate = true;
+    }
+  }
+
+  /* 바람 */
+  if(state.windT>0){ state.windT-=dt; state.wind = Math.min(1, state.wind+dt*1.5); }
+  else state.wind = Math.max(0, state.wind-dt*0.7);
+  trees.forEach(tr=>{
+    tr.rotation.z = state.wind*0.45 + Math.sin(t*2+tr.userData.phase)*0.02*(1+state.wind*10);
+    tr.rotation.x = Math.sin(t*2.7+tr.userData.phase)*0.015*(1+state.wind*8);
+  });
+
+  /* 지진 */
+  let shakeX=0, shakeY=0;
+  if(state.quakeT>0){
+    state.quakeT -= dt;
+    const k = Math.min(1, state.quakeT/2);
+    shakeX = (Math.random()-0.5)*k*1.6*Math.min(20,cam.dist)/20;
+    shakeY = (Math.random()-0.5)*k*1.2*Math.min(20,cam.dist)/20;
+    if(Math.random()<0.06) noiseSound(0.5, 90+Math.random()*80, 0.15);
+  }
+  buildings.forEach(b=>{
+    if(b.collapsing){
+      b.collapseT += dt;
+      const c = Math.min(1, b.collapseT/1.4);
+      b.group.rotation.x = Math.sin(b.fallDir)*c*1.1;
+      b.group.rotation.z = Math.cos(b.fallDir)*c*1.1;
+      b.group.position.y = -c*1.2;
+      if(state.quakeT<=0 && b.collapseT>3){ // 서서히 복구
+        b.collapsing=false; b.rebuild=0;
+      }
+    } else if(b.rebuild!==undefined && b.rebuild<1){
+      b.rebuild += dt*0.5;
+      const c = 1-Math.min(1,b.rebuild);
+      b.group.rotation.x = Math.sin(b.fallDir)*c*1.1;
+      b.group.rotation.z = Math.cos(b.fallDir)*c*1.1;
+      b.group.position.y = -c*1.2;
+    } else if(state.quakeT>0 && !b.collapsing){
+      b.group.position.y = (Math.random()-0.5)*0.25;
+    } else if(!b.collapsing){
+      b.group.position.y = 0;
+    }
+  });
+
+  /* 홍수 */
+  if(state.floodT>0){
+    state.floodT -= dt;
+    const total=16, elapsed = total-state.floodT;
+    let lvl;
+    if(elapsed<5) lvl = elapsed/5;          // 차오름
+    else if(elapsed<10) lvl = 1;            // 유지
+    else lvl = Math.max(0,(total-elapsed)/6); // 빠짐
+    state.floodLevel = lvl;
+    floodWater.visible = lvl>0.02;
+    floodWater.position.y = -3 + lvl*6.2;
+    floodMat.opacity = 0.4+lvl*0.35;
+    if(Math.random()<0.04) noiseSound(0.8, 700, 0.08);
+  } else { floodWater.visible=false; state.floodLevel=0; }
+
+  /* 사람들 */
+  const dtDay = dayTime();
+  people.forEach(p=>{
+    if(p.panic){
+      p.panicT -= dt;
+      if(p.panicT<=0) p.panic=false;
+      if(Math.random()<0.02){ p.tx = p.x+(Math.random()-0.5)*30; p.tz = p.z+(Math.random()-0.5)*30; }
+      p.state = '😱 대피 중!';
+    } else if(p.pauseT>0){
+      p.pauseT -= dt; p.state='인사 중';
+    } else {
+      // 일과
+      let dest;
+      if(dtDay>=8 && dtDay<17 && p.work){ dest=p.work; p.state=`${p.job} 일하는 중`; }
+      else if(dtDay>=17 && dtDay<21){ dest=null; p.state='산책 중'; }
+      else { dest=p.home; p.state = (dtDay>=22||dtDay<6)?'잠자는 중 💤':'집에서 쉬는 중'; }
+      p.wanderT -= dt;
+      if(p.wanderT<=0){
+        p.wanderT = 2.5+Math.random()*4;
+        if(dest){ p.tx = dest.x+(Math.random()-0.5)*9; p.tz = dest.z+(Math.random()-0.5)*9; }
+        else { p.tx = p.x+(Math.random()-0.5)*22; p.tz = p.z+(Math.random()-0.5)*22; }
+      }
+    }
+    const dx = p.tx-p.x, dz = p.tz-p.z, d = Math.hypot(dx,dz);
+    const spd = p.panic ? p.speed*2.6 : p.speed;
+    if(d>0.4 && p.pauseT<=0){
+      p.x += dx/d*spd*dt*(1+state.wind*1.5);
+      p.z += dz/d*spd*dt;
+      p.mesh.rotation.y = Math.atan2(dx,dz);
+      p.mesh.position.y = Math.abs(Math.sin(t*8+p.phase))*0.14;
+    } else p.mesh.position.y = 0;
+    p.mesh.position.x = p.x; p.mesh.position.z = p.z;
+    if(p.greetCd>0) p.greetCd -= dt;
+  });
+
+  /* 인사 체크 */
+  greetTimer -= dt;
+  if(greetTimer<=0 && !state.onMoon){
+    greetTimer = 0.7;
+    for(let i=0;i<people.length;i++){
+      const a = people[i];
+      if(a.greetCd>0 || a.panic) continue;
+      for(let j=i+1;j<people.length;j++){
+        const b = people[j];
+        if(b.greetCd>0 || b.panic) continue;
+        if(Math.hypot(a.x-b.x, a.z-b.z)<3.5){
+          a.greetCd = b.greetCd = 18+Math.random()*15;
+          a.pauseT = b.pauseT = 2;
+          a.mesh.rotation.y = Math.atan2(b.x-a.x, b.z-a.z);
+          b.mesh.rotation.y = Math.atan2(a.x-b.x, a.z-b.z);
+          showBubble(a.x, 3.1, a.z, GREETS[Math.floor(Math.random()*GREETS.length)]);
+          showBubble(b.x, 3.1, b.z, GREETS[Math.floor(Math.random()*GREETS.length)], 1.8);
+          if(cam.dist<130) greetSound();
+          break;
+        }
+      }
+    }
+  }
+
+  /* 주변 소리 (새/귀뚜라미/수다/공룡) */
+  ambientTimer -= dt;
+  if(ambientTimer<=0 && !state.onMoon && actx){
+    ambientTimer = 2.5+Math.random()*3;
+    const day = dtDay>6 && dtDay<19;
+    if(state.era===0){ if(Math.random()<0.4) dinoSound(); else if(day) birdSound(); }
+    else if(day){
+      if(Math.random()<0.5) birdSound();
+      else if(people.length && cam.dist<100){ chatterSound();
+        const p = people[Math.floor(Math.random()*people.length)];
+        if(Math.random()<0.4) showBubble(p.x,3.1,p.z, CHATS[Math.floor(Math.random()*CHATS.length)]);
+      }
+    } else cricketSound();
+  }
+
+  /* 말풍선 */
+  for(let i=bubbles.length-1;i>=0;i--){
+    const b = bubbles[i];
+    b.life -= dt;
+    const s = Math.max(1.6, Math.min(14, cam.dist*0.055));
+    b.sp.scale.set(s, s*0.34, 1);
+    b.sp.material.opacity = Math.min(1, b.life/0.5);
+    b.sp.position.y += dt*0.4;
+    if(b.life<=0){ worldRoot.remove(b.sp); b.sp.material.map.dispose(); b.sp.material.dispose(); bubbles.splice(i,1); }
+  }
+
+  /* 동물 */
+  animals.forEach(a=>{
+    a.t -= dt;
+    if(a.t<=0){ a.t = 3+Math.random()*6; a.tx = a.x+(Math.random()-0.5)*(a.dino?60:30); a.tz = a.z+(Math.random()-0.5)*(a.dino?60:30); }
+    const dx=a.tx-a.x, dz=a.tz-a.z, d=Math.hypot(dx,dz);
+    if(d>1){
+      a.x += dx/d*a.speed*dt; a.z += dz/d*a.speed*dt;
+      a.mesh.rotation.y = Math.atan2(dx,dz);
+      a.mesh.position.y = Math.abs(Math.sin(t*6))*0.15;
+    }
+    a.mesh.position.x=a.x; a.mesh.position.z=a.z;
+  });
+
+  /* 자동차 */
+  cars.forEach(c=>{
+    c.t += c.dir*c.speed*dt;
+    if(c.t>140) c.t=-140; if(c.t<-140) c.t=140;
+    if(c.axis==='x') c.g.position.set(c.t, 0, c.line);
+    else c.g.position.set(c.line, 0, c.t);
+  });
+
+  /* 드론 */
+  drones.forEach(d=>{
+    d.a += d.sp*dt;
+    d.g.position.set(d.cx+Math.cos(d.a)*d.r, d.h+Math.sin(t*2+d.a)*1.5, d.cz+Math.sin(d.a)*d.r);
+    d.g.rotation.y = -d.a;
+  });
+
+  /* 풍차 */
+  spinners.forEach(sp=>{ sp.rotation.z += dt*(1+state.wind*6); });
+
+  /* 굴뚝 연기 */
+  if(smokeStacks.length){
+    smokeSprites.forEach((s,i)=>{
+      const stack = smokeStacks[i % smokeStacks.length];
+      s.t += dt*0.35;
+      if(s.t>1) s.t=0;
+      const wp = new THREE.Vector3(stack.ox, 10.5, stack.oz);
+      stack.parent.localToWorld(wp);
+      s.sp.visible = true;
+      s.sp.position.set(wp.x + s.t*8*(0.3+state.wind*2), wp.y + s.t*16, wp.z + Math.sin(s.t*9+i)*1.5);
+      s.sp.material.opacity = 0.5*(1-s.t);
+      s.sp.scale.setScalar(2.5+s.t*7);
+    });
+  } else smokeSprites.forEach(s=>{ s.sp.visible=false; });
+
+  /* 운석 */
+  if(meteor){
+    meteor.t += dt;
+    const f = meteor.t/2.2;
+    meteor.mesh.position.lerpVectors(new THREE.Vector3(250,400,-220), new THREE.Vector3(0,4,0), Math.min(1,f));
+    meteor.mesh.scale.setScalar(1+f*0.5);
+    if(f>=1){
+      worldRoot.remove(meteor.mesh); meteor=null;
+      const flash = document.getElementById('flash');
+      flash.style.transition='none'; flash.style.opacity=0.9;
+      setTimeout(()=>{ flash.style.transition='opacity 1.2s'; flash.style.opacity=0; },60);
+      noiseSound(2, 150, 0.5);
+      state.quakeT = Math.max(state.quakeT, 2);
+    }
+  }
+
+  /* 로켓 발사 */
+  if(state.launching){
+    state.launchT += dt;
+    const lt = state.launchT;
+    if(lt>1.5){
+      rocket.position.y = Math.pow(lt-1.5, 2.2)*14;
+      const flame = rocket.getObjectByName('flame');
+      flame.scale.y = 1+Math.random()*0.6;
+      shakeX += (Math.random()-0.5)*0.4; shakeY += (Math.random()-0.5)*0.4;
+      // 카메라가 로켓 따라감
+      const wp = new THREE.Vector3(); rocket.getWorldPosition(wp);
+      cam.target.lerp(new THREE.Vector3(wp.x, wp.y+8, wp.z), Math.min(1, dt*3));
+      cam.dist = Math.max(40, cam.dist - dt*60);
+      if(rocket.position.y>260){ state.launching=false; travel(true); }
+    }
+  }
+
+  /* 달 위 우주인 */
+  if(state.onMoon){
+    const sp = 8;
+    let mx=0, mz=0;
+    if(keys['w']||keys['arrowup']) mz-=1;
+    if(keys['s']||keys['arrowdown']) mz+=1;
+    if(keys['a']||keys['arrowleft']) mx-=1;
+    if(keys['d']||keys['arrowright']) mx+=1;
+    if(mx||mz){
+      const st=Math.sin(cam.theta), ct=Math.cos(cam.theta);
+      const wx = mx*ct - mz*st, wz = -mx*st - mz*ct;
+      const len = Math.hypot(wx,wz)||1;
+      astronaut.position.x += wx/len*sp*dt*-1;
+      astronaut.position.z += wz/len*sp*dt*-1;
+      astronaut.rotation.y = Math.atan2(-wx,-wz);
+      moonState.hop += dt*7;
+      astronaut.position.y = Math.abs(Math.sin(moonState.hop))*0.9; // 낮은 중력 껑충
+    } else {
+      astronaut.position.y = Math.max(0, astronaut.position.y - dt*2);
+    }
+    astronaut.position.x = Math.max(-380, Math.min(380, astronaut.position.x));
+    astronaut.position.z = Math.max(-380, Math.min(380, astronaut.position.z));
+    cam.target.lerp(new THREE.Vector3(astronaut.position.x, 1, astronaut.position.z), Math.min(1,dt*4));
+    const fl = moonRoot.getObjectByName('moonFlag');
+    if(fl) fl.rotation.y = Math.sin(t*1.2)*0.15;
+  } else {
+    /* 지구 위 키보드 이동 */
+    const kSp = cam.dist*0.55;
+    if(keys['w']||keys['arrowup']){ cam.target.x -= Math.sin(cam.theta)*kSp*dt; cam.target.z -= Math.cos(cam.theta)*kSp*dt; }
+    if(keys['s']||keys['arrowdown']){ cam.target.x += Math.sin(cam.theta)*kSp*dt; cam.target.z += Math.cos(cam.theta)*kSp*dt; }
+    if(keys['a']||keys['arrowleft']){ cam.target.x -= Math.cos(cam.theta)*kSp*dt; cam.target.z += Math.sin(cam.theta)*kSp*dt; }
+    if(keys['d']||keys['arrowright']){ cam.target.x += Math.cos(cam.theta)*kSp*dt; cam.target.z -= Math.sin(cam.theta)*kSp*dt; }
+  }
+
+  /* 시계 UI */
+  const dtH = dayTime();
+  document.getElementById('clockLine').textContent =
+    `${SEASONS[seasonIdx()]} · ${timeLabel()} ${String(Math.floor(dtH)).padStart(2,'0')}:${String(Math.floor((dtH%1)*60)).padStart(2,'0')}`;
+
+  /* 물결 애니메이션 */
+  if(riverWater && riverWater.visible) riverWater.material.uniforms.time.value += dt*0.7;
+
+  applyCamera();
+  camera.position.x += shakeX; camera.position.y += Math.abs(shakeY)*0.5; camera.position.z += shakeY;
+
+  composer.render();
+}
+
+buildCity(0);
+applySeasonColors();
+applyCamera();
+setSpeed(1);
+banner('🦕 공룡시대 — 휠로 확대/축소, 휠 누르고 드래그로 각도를 바꿔보세요!', 6000);
+animate();
+</script>
+</body>
+</html>
