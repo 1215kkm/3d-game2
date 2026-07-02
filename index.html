@@ -1912,6 +1912,10 @@ function animate(){
   composer.render();
 }
 
+window.__dbg = ()=>({launching:state.launching, launchT:state.launchT, flight:state.flight,
+  view:state.view, dist:+cam.dist.toFixed(2), tgt:cam.target.toArray().map(v=>+v.toFixed(1)),
+  rocketY:+rocket.position.y.toFixed(1), era:state.era, eraFloat:+state.eraFloat.toFixed(2)});
+
 buildCity(0);
 applySeasonColors();
 applyCamera();
